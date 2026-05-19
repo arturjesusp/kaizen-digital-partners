@@ -135,6 +135,10 @@ const STACK = [
   "MULTILINGUAL (EN, ES, FR, JA)",
 ];
 
+/* Row 1: tech foundations — Row 2: strategic capabilities (distinct sets for the two marquee rows) */
+const STACK_ROW_1 = ["NEXT.JS", "REACT", "TAILWIND CSS", "SUPABASE", "VERCEL"];
+const STACK_ROW_2 = ["AUTOMATION SYSTEMS", "STRATEGIC PLANNING", "DATA ENGINEERING", "AI SOLUTION DESIGN", "MULTILINGUAL (EN, ES, FR, JA)"];
+
 /* Color combinations inspired by Dictionary of Color Combinations Vol 2
    Each tag cycles through a sophisticated palette on hover. */
 const COLOR_COMBOS = [
@@ -271,55 +275,37 @@ export default function KaizenLanding() {
           id="stack"
           className="relative py-24 md:py-32 border-b border-zinc-200 dark:border-zinc-800"
         >
-          <div className="px-6 md:px-10 lg:px-16 mb-12 md:mb-16">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-end">
-              <p className="md:col-span-3 text-[11px] tracking-[0.3em] font-medium text-zinc-500 dark:text-zinc-400">
-                {t.stack.label}
-              </p>
-              <h2 className="md:col-span-9 font-serif text-3xl md:text-4xl lg:text-5xl tracking-[-0.02em] leading-tight max-w-3xl">
+          {/* Centered header */}
+          <div className="text-center mb-14 md:mb-20 px-6">
+            <AnimatePresence mode="wait">
+              <motion.h2
+                key={language + "-stack-title"}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="font-serif text-4xl md:text-5xl lg:text-6xl tracking-[-0.02em] leading-tight"
+              >
                 {t.stack.title}
-              </h2>
-            </div>
+              </motion.h2>
+            </AnimatePresence>
+            <p className="mt-3 text-[11px] tracking-[0.35em] font-medium text-zinc-500 dark:text-zinc-400 uppercase">
+              {t.stack.label.replace("—— ", "")}
+            </p>
           </div>
 
-          {/* Edge-to-edge marquee with refined spacing and opacity edges */}
-          <div className="relative w-full overflow-hidden">
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-20 md:w-40 z-10 bg-gradient-to-r from-stone-50 via-stone-50/40 to-transparent dark:from-zinc-950 dark:via-zinc-950/40" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-20 md:w-40 z-10 bg-gradient-to-l from-stone-50 via-stone-50/40 to-transparent dark:from-zinc-950 dark:via-zinc-950/40" />
+          {/* Row 1 — forward, tech foundations */}
+          <MarqueeRow
+            tags={STACK_ROW_1}
+            direction="forward"
+            className="mb-4"
+          />
 
-            <div className="flex w-max animate-marquee gap-4 md:gap-5">
-              {[...STACK.slice(0, 7), ...STACK.slice(0, 7)].map((tag, i) => {
-                const comboIdx = STACK.indexOf(tag) % COLOR_COMBOS.length;
-                const combo = COLOR_COMBOS[comboIdx];
-                return (
-                  <span
-                    key={`${tag}-${i}`}
-                    className={`inline-flex items-center rounded-full border border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 px-5 py-2.5 text-xs tracking-widest font-semibold uppercase text-stone-800 dark:text-zinc-300 whitespace-nowrap transition-all duration-300 hover:scale-105 ${combo.light} ${combo.dark}`}
-                  >
-                    {tag}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Static, hoverable grid below — for accessibility / keyboard nav */}
-          <div className="mt-14 px-6 md:px-10 lg:px-16 flex flex-wrap gap-4">
-            {STACK.map((tag) => {
-              const comboIdx = STACK.indexOf(tag) % COLOR_COMBOS.length;
-              const combo = COLOR_COMBOS[comboIdx];
-              return (
-                <motion.span
-                  key={tag}
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 24 }}
-                  className={`inline-flex items-center rounded-full border border-stone-200 dark:border-zinc-700 px-5 py-2.5 text-xs tracking-widest font-semibold uppercase bg-stone-50 dark:bg-zinc-950 text-stone-800 dark:text-zinc-300 cursor-default transition-all duration-300 ${combo.light} ${combo.dark}`}
-                >
-                  {tag}
-                </motion.span>
-              );
-            })}
-          </div>
+          {/* Row 2 — reverse, strategic capabilities */}
+          <MarqueeRow
+            tags={STACK_ROW_2}
+            direction="reverse"
+          />
         </section>
 
         {/* ───────── Services Grid ───────── */}
@@ -606,6 +592,44 @@ function ServiceCard({
         <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" strokeWidth={1.75} />
       </div>
     </a>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   MarqueeRow — infinite scroll strip, forward or reverse direction
+   ────────────────────────────────────────────────────────────────────────── */
+function MarqueeRow({
+  tags,
+  direction,
+  className = "",
+}: {
+  tags: string[];
+  direction: "forward" | "reverse";
+  className?: string;
+}) {
+  const doubled = [...tags, ...tags];
+  const animClass = direction === "forward" ? "animate-marquee" : "animate-marquee-reverse";
+
+  return (
+    <div className={`relative w-full overflow-hidden ${className}`}>
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-20 md:w-40 z-10 bg-gradient-to-r from-stone-50 via-stone-50/50 to-transparent dark:from-zinc-950 dark:via-zinc-950/50" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-20 md:w-40 z-10 bg-gradient-to-l from-stone-50 via-stone-50/50 to-transparent dark:from-zinc-950 dark:via-zinc-950/50" />
+
+      <div className={`flex w-max gap-4 md:gap-5 py-2 ${animClass}`}>
+        {doubled.map((tag, i) => {
+          const comboIdx = STACK.indexOf(tag) % COLOR_COMBOS.length;
+          const combo = COLOR_COMBOS[comboIdx >= 0 ? comboIdx : i % COLOR_COMBOS.length];
+          return (
+            <span
+              key={`${tag}-${i}`}
+              className={`inline-flex items-center rounded-full border border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 px-5 py-2.5 text-xs tracking-widest font-semibold uppercase text-stone-800 dark:text-zinc-300 whitespace-nowrap transition-all duration-300 hover:scale-105 ${combo.light} ${combo.dark}`}
+            >
+              {tag}
+            </span>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
