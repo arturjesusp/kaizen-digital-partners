@@ -59,3 +59,18 @@ body {
   100% { background-position: 100% center; }
 }
 
+/* Light-mode override — deep dark tones instead of zinc-white wash */
+html:not(.dark) .shimmer-text {
+  background-image: linear-gradient(
+    90deg,
+    #18181b 0%,    /* zinc-900 base     */
+    #18181b 28%,
+    #3730a3 40%,   /* indigo-800 flash  */
+    #4c1d95 50%,   /* violet-900 depth  */
+    #92400e 58%,   /* amber-800 warmth  */
+    #3730a3 66%,   /* indigo-800 fade   */
+    #18181b 76%,
+    #18181b 100%   /* zinc-900 base     */
+  );
+}
+

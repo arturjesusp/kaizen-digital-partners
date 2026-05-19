@@ -69,14 +69,14 @@ export default function CustomCursor() {
   if (!mounted) return null;
 
   return (
+    /* mix-blend-mode:difference inverts white elements against any background —
+       dot and ring stay white; the blend layer auto-renders them dark on light
+       backgrounds and white on dark backgrounds with zero theme-state wiring. */
     <div
-      className="pointer-events-none fixed inset-0 z-[9999]"
+      className="pointer-events-none fixed inset-0 z-[9999] mix-blend-difference"
       aria-hidden
     >
-      {/* ── Inner dot ─────────────────────────────────────────────────────────
-          Plain div, no Framer Motion. Transform is written directly in onMove
-          so it tracks the hardware cursor with 0 ms of additional latency.
-          Margin offsets center the 6 px dot on the cursor hotspot. */}
+      {/* ── Inner dot — white; blend mode handles contrast inversion ──────── */}
       <div
         ref={dotRef}
         className="pointer-events-none absolute top-0 left-0 h-1.5 w-1.5 rounded-full bg-white"
@@ -89,11 +89,9 @@ export default function CustomCursor() {
         }}
       />
 
-      {/* ── Outer ring ────────────────────────────────────────────────────────
-          motion.div driven by useSpring — trails with physics, expands on
-          interactive hover. margin offsets center the 28 px ring. */}
+      {/* ── Outer ring — white border; blend mode auto-inverts ────────────── */}
       <motion.div
-        className="pointer-events-none absolute top-0 left-0 h-7 w-7 rounded-full border bg-transparent"
+        className="pointer-events-none absolute top-0 left-0 h-7 w-7 rounded-full border-2 border-white bg-transparent"
         style={{
           x:           rx,
           y:           ry,
@@ -102,11 +100,8 @@ export default function CustomCursor() {
           willChange:  "transform",
         }}
         animate={{
-          scale:       isHovering ? 1.5 : 1,
-          opacity:     isVisible  ? 1   : 0,
-          borderColor: isHovering
-            ? "rgba(228,228,231,0.85)"
-            : "rgba(168,162,158,0.50)",
+          scale:   isHovering ? 1.5 : 1,
+          opacity: isVisible  ? 1   : 0,
         }}
         transition={{ duration: 0.2, ease: "easeOut" }}
       />

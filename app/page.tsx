@@ -1,7 +1,15 @@
 "use client";
 
-import { useState, useMemo, useEffect, Fragment, type FormEvent } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo, useEffect, useRef, Fragment, type FormEvent } from "react";
+import { supabase } from "@/lib/supabase";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useInView,
+  useMotionValueEvent,
+  animate,
+} from "framer-motion";
 import {
   Sun,
   Moon,
@@ -184,27 +192,18 @@ const allTechs = [
   "MULTILINGUAL (EN, ES, FR, JA)",
 ];
 
-/* Dictionary of Color Combinations Vol 2 — per-pill hover palette */
-type PillTheme = { borderColor: string; color: string; boxShadow: string };
-
-const PILL_THEMES: Record<string, PillTheme> = {
-  "NEXT.JS":                       { borderColor: "rgba(167,139,250,0.75)", color: "rgb(221,214,254)", boxShadow: "0 0 24px 6px rgba(139,92,246,0.30)"  }, // Soft Amethyst
-  "AUTOMATION SYSTEMS":            { borderColor: "rgba(52,211,153,0.75)",  color: "rgb(167,243,208)", boxShadow: "0 0 24px 6px rgba(52,211,153,0.28)"  }, // Deep Emerald
-  "REACT":                         { borderColor: "rgba(34,211,238,0.75)",  color: "rgb(165,243,252)", boxShadow: "0 0 24px 6px rgba(34,211,238,0.28)"  }, // Cyber Cyan
-  "STRATEGIC PLANNING":            { borderColor: "rgba(251,191,36,0.75)",  color: "rgb(253,230,138)", boxShadow: "0 0 24px 6px rgba(251,191,36,0.24)"  }, // Muted Gold
-  "TAILWIND CSS":                  { borderColor: "rgba(56,189,248,0.75)",  color: "rgb(186,230,253)", boxShadow: "0 0 24px 6px rgba(56,189,248,0.28)"  }, // Arctic Sky
-  "DATA ENGINEERING":              { borderColor: "rgba(129,140,248,0.75)", color: "rgb(199,210,254)", boxShadow: "0 0 24px 6px rgba(99,102,241,0.28)"  }, // Deep Indigo
-  "SUPABASE":                      { borderColor: "rgba(74,222,128,0.75)",  color: "rgb(187,247,208)", boxShadow: "0 0 24px 6px rgba(34,197,94,0.25)"   }, // Vivid Jade
-  "AI SOLUTION DESIGN":            { borderColor: "rgba(96,165,250,0.75)",  color: "rgb(191,219,254)", boxShadow: "0 0 24px 6px rgba(59,130,246,0.30)"  }, // Sapphire Blue
-  "VERCEL":                        { borderColor: "rgba(212,212,216,0.75)", color: "rgb(244,244,245)", boxShadow: "0 0 24px 6px rgba(244,244,245,0.22)" }, // Platinum
-  "MULTILINGUAL (EN, ES, FR, JA)": { borderColor: "rgba(251,113,133,0.75)", color: "rgb(254,205,211)", boxShadow: "0 0 24px 6px rgba(244,63,94,0.25)"  }, // Lacquer Rose
-};
-
-const DEFAULT_PILL_THEME: PillTheme = {
-  borderColor: "rgba(113,113,122,0.7)",
-  color: "rgb(244,244,245)",
-  boxShadow: "0 0 24px 6px rgba(113,113,122,0.2)",
-};
+/* Sanzo Wada Vol. 2 — 4-tone sequential palette, assigned per unique tag position.
+   Written as complete string literals so Tailwind's scanner picks up every class. */
+const WADA_PILL_VARIANTS = [
+  // Mustard / Ocre
+  "hover:bg-[#cfa243]/20 hover:text-stone-900 hover:border-[#cfa243]/60 dark:hover:bg-[#cfa243]/30 dark:hover:text-white dark:hover:border-[#cfa243]/50",
+  // Sage / Olive Green
+  "hover:bg-[#8ba187]/20 hover:text-stone-900 hover:border-[#8ba187]/60 dark:hover:bg-[#8ba187]/30 dark:hover:text-white dark:hover:border-[#8ba187]/50",
+  // Dusty Coral / Terra-cotta
+  "hover:bg-[#c28d75]/20 hover:text-stone-900 hover:border-[#c28d75]/60 dark:hover:bg-[#c28d75]/30 dark:hover:text-white dark:hover:border-[#c28d75]/50",
+  // Teal / Slate Blue
+  "hover:bg-[#6b8f9e]/20 hover:text-stone-900 hover:border-[#6b8f9e]/60 dark:hover:bg-[#6b8f9e]/30 dark:hover:text-white dark:hover:border-[#6b8f9e]/50",
+] as const;
 
 const SERVICE_ICONS = [Sparkles, Workflow, Database] as const;
 
@@ -215,6 +214,7 @@ export default function KaizenLanding() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [language, setLanguage] = useState<Lang>("EN");
   const [dotStep, setDotStep] = useState(0);
+  const [formState, setFormState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const t = useMemo(() => copy[language], [language]);
 
   useEffect(() => {
@@ -228,11 +228,30 @@ export default function KaizenLanding() {
     return () => clearInterval(id);
   }, []);
 
-  // Future Supabase wiring — currently a no-op stub.
-  const handleLeadSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleLeadSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // const form = new FormData(e.currentTarget);
-    // await supabase.from('leads').insert({ ... })
+    if (formState === "loading" || formState === "success") return;
+    setFormState("loading");
+    const data = new FormData(e.currentTarget);
+    const payload = {
+      email:   data.get("email")   as string,
+      company: data.get("company") as string,
+      message: data.get("message") as string,
+    };
+    if (!supabase) {
+      console.log("[kaizen] Form submission (Supabase not configured):", payload);
+      setFormState("success");
+      (e.target as HTMLFormElement).reset();
+      return;
+    }
+    try {
+      const { error } = await supabase.from("inquiries").insert(payload);
+      if (error) throw error;
+      setFormState("success");
+      (e.target as HTMLFormElement).reset();
+    } catch {
+      setFormState("error");
+    }
   };
 
   return (
@@ -258,14 +277,22 @@ export default function KaizenLanding() {
           <div className="relative w-full px-6 md:px-10 lg:px-16 pt-40 pb-20 md:pt-48 md:pb-28">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
               <div className="lg:col-span-9">
-                <motion.p
+                <motion.div
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                  className="text-[11px] tracking-[0.3em] font-medium text-zinc-500 dark:text-zinc-400 mb-8"
+                  className="inline-flex items-center gap-2.5 mb-8"
                 >
-                  {t.hero.eyebrow}
-                </motion.p>
+                  <motion.span
+                    aria-hidden
+                    className="block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0"
+                    animate={{ opacity: [1, 0.25, 1] }}
+                    transition={{ duration: 3.5, ease: "easeInOut", repeat: Infinity }}
+                  />
+                  <span className="text-[11px] tracking-[0.3em] font-medium text-zinc-500 dark:text-zinc-400">
+                    {t.hero.eyebrow}
+                  </span>
+                </motion.div>
 
                 <AnimatePresence mode="wait">
                   <motion.h1
@@ -282,7 +309,7 @@ export default function KaizenLanding() {
                         The invisible "..." ghost holds the space; the real dots sit on top. */}
                     <span className="inline-block align-baseline relative" aria-hidden="true">
                       <span className="invisible" aria-hidden="true">...</span>
-                      <span className="absolute inset-0 text-zinc-300 dark:text-zinc-200">
+                      <span className="absolute inset-0 text-zinc-500 dark:text-zinc-300">
                         {".".repeat(dotStep)}
                       </span>
                     </span>
@@ -326,8 +353,10 @@ export default function KaizenLanding() {
             {/* Bottom metric strip — Danshari: a single, restrained anchor */}
             <div className="mt-20 md:mt-28 pt-8 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-6">
               {t.metrics.map(({ n, label }) => (
-                <div key={label} className="flex flex-col">
-                  <span className="font-serif text-3xl md:text-4xl tracking-tight">{n}</span>
+                <div key={n} className="flex flex-col">
+                  <span className="font-serif text-3xl md:text-4xl tracking-tight">
+                    <AnimatedNumber n={n} />
+                  </span>
                   <span className="mt-2 text-[10px] tracking-[0.25em] uppercase text-zinc-500 dark:text-zinc-400">
                     {label}
                   </span>
@@ -357,7 +386,7 @@ export default function KaizenLanding() {
               </motion.h2>
             </AnimatePresence>
             <p className="mt-3 text-[11px] tracking-[0.35em] font-medium text-zinc-500 dark:text-zinc-400 uppercase">
-              {t.stack.label.replace("—— ", "")}
+              {`-- ${t.stack.label.replace(/^—+\s*/, "")} --`}
             </p>
           </div>
 
@@ -370,11 +399,11 @@ export default function KaizenLanding() {
           className="relative py-24 md:py-32 border-b border-zinc-200 dark:border-zinc-800"
         >
           <div className="px-6 md:px-10 lg:px-16">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-end mb-16 md:mb-24">
-              <p className="md:col-span-3 text-[11px] tracking-[0.3em] font-medium text-zinc-500 dark:text-zinc-400">
+            <div className="mb-16 md:mb-24 text-center">
+              <p className="text-[11px] tracking-[0.35em] font-medium text-zinc-500 dark:text-zinc-400 uppercase mb-5">
                 {t.services.label}
               </p>
-              <h2 className="md:col-span-9 font-serif text-3xl md:text-4xl lg:text-5xl tracking-[-0.02em] leading-tight max-w-4xl">
+              <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl tracking-[-0.02em] leading-tight max-w-4xl mx-auto">
                 {t.services.title}
               </h2>
             </div>
@@ -422,25 +451,70 @@ export default function KaizenLanding() {
 
               <form
                 onSubmit={handleLeadSubmit}
-                className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-px bg-zinc-200 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800"
+                className="lg:col-span-7 flex flex-col gap-3"
               >
-                <FormField name="email" type="email" required label={t.contact.email} />
-                <FormField name="company" type="text" required label={t.contact.company} />
-                <FormField
-                  name="message"
-                  type="text"
-                  required
-                  label={t.contact.message}
-                  className="sm:col-span-2"
-                  textarea
-                />
-                <div className="sm:col-span-2 bg-stone-50 dark:bg-zinc-950 p-6 md:p-8 flex items-center justify-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <FormField name="email"   type="email" required label={t.contact.email}   />
+                  <FormField name="company" type="text"  required label={t.contact.company} />
+                </div>
+                <FormField name="message" type="text" required label={t.contact.message} textarea />
+
+                <div className="flex items-center justify-between pt-1 gap-4">
+                  {/* Inline status feedback */}
+                  <AnimatePresence mode="wait">
+                    {formState === "success" && (
+                      <motion.p
+                        key="success"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="text-xs tracking-wide text-emerald-500"
+                      >
+                        {language === "JP" ? "お問い合わせを受け付けました。" :
+                         language === "FR" ? "Demande reçue — nous reviendrons vers vous." :
+                         language === "ES" ? "Consulta recibida — estaremos en contacto." :
+                         "Inquiry received — we'll be in touch."}
+                      </motion.p>
+                    )}
+                    {formState === "error" && (
+                      <motion.p
+                        key="error"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="text-xs tracking-wide text-rose-400"
+                      >
+                        {language === "JP" ? "エラーが発生しました。再度お試しください。" :
+                         language === "FR" ? "Une erreur s'est produite. Veuillez réessayer." :
+                         language === "ES" ? "Algo salió mal. Por favor intenta de nuevo." :
+                         "Something went wrong. Please try again."}
+                      </motion.p>
+                    )}
+                    {(formState === "idle" || formState === "loading") && (
+                      <span key="spacer" />
+                    )}
+                  </AnimatePresence>
+
                   <button
                     type="submit"
-                    className="group inline-flex items-center gap-3 border border-zinc-900 dark:border-zinc-50 px-6 py-3 text-xs tracking-[0.25em] font-semibold uppercase text-zinc-900 dark:text-zinc-50 hover:bg-zinc-900 hover:text-stone-50 dark:hover:bg-zinc-50 dark:hover:text-zinc-950 transition-colors duration-300"
+                    disabled={formState === "loading" || formState === "success"}
+                    className="group inline-flex items-center gap-3 rounded-full border border-zinc-900 dark:border-zinc-50 px-7 py-3 text-xs tracking-[0.25em] font-semibold uppercase text-zinc-900 dark:text-zinc-50 hover:bg-zinc-900 hover:text-stone-50 dark:hover:bg-zinc-50 dark:hover:text-zinc-950 disabled:opacity-40 disabled:pointer-events-none transition-colors duration-300 whitespace-nowrap"
                   >
-                    <span>{t.contact.submit}</span>
-                    <Send className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" strokeWidth={1.75} />
+                    {formState === "loading" ? (
+                      <span className="inline-flex items-center gap-2">
+                        <motion.span
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="inline-block h-3 w-3 rounded-full border border-current border-t-transparent"
+                        />
+                        <span>{language === "JP" ? "送信中..." : language === "FR" ? "Envoi..." : language === "ES" ? "Enviando..." : "Sending..."}</span>
+                      </span>
+                    ) : (
+                      <>
+                        <span>{t.contact.submit}</span>
+                        <Send className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" strokeWidth={1.75} />
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -496,39 +570,45 @@ function Header({
 
         {/* Controls */}
         <div className="flex items-center gap-3 md:gap-6">
-          {/* Theme toggle */}
-          <button
+          {/* Theme toggle — transparent circle, border breathes between light/dark poles */}
+          <motion.button
             type="button"
             aria-label="Toggle theme"
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="relative h-9 w-9 inline-flex items-center justify-center rounded-full border border-zinc-300 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-50 transition-colors overflow-hidden"
+            className="h-10 w-10 inline-flex items-center justify-center rounded-full border-[1px] bg-transparent"
+            animate={{
+              borderColor: isDarkMode
+                ? ["#ffffff", "#1c1917", "#ffffff"]
+                : ["#0c0a09", "#e7e5e4", "#0c0a09"],
+            }}
+            transition={{ duration: 3, ease: "easeInOut", repeat: Infinity }}
           >
             <AnimatePresence mode="wait" initial={false}>
               {isDarkMode ? (
                 <motion.span
                   key="moon"
                   initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
+                  animate={{ rotate: 0,   opacity: 1 }}
+                  exit={{    rotate:  90, opacity: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="inline-flex"
+                  className="inline-flex text-zinc-50"
                 >
                   <Moon className="h-4 w-4" strokeWidth={1.5} />
                 </motion.span>
               ) : (
                 <motion.span
                   key="sun"
-                  initial={{ rotate: 90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: -90, opacity: 0 }}
+                  initial={{ rotate:  90, opacity: 0 }}
+                  animate={{ rotate:   0, opacity: 1 }}
+                  exit={{    rotate: -90, opacity: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="inline-flex"
+                  className="inline-flex text-zinc-900"
                 >
                   <Sun className="h-4 w-4" strokeWidth={1.5} />
                 </motion.span>
               )}
             </AnimatePresence>
-          </button>
+          </motion.button>
 
           {/* Language */}
           <div className="hidden sm:flex items-center gap-1.5 text-xs tracking-widest font-medium select-none">
@@ -661,20 +741,14 @@ function Marquee() {
         transition={{ ease: "linear", duration: 40, repeat: Infinity }}
       >
         {tripled.map((tag, i) => {
-          const theme = PILL_THEMES[tag] ?? DEFAULT_PILL_THEME;
+          const hover = WADA_PILL_VARIANTS[(i % allTechs.length) % WADA_PILL_VARIANTS.length];
           return (
-            <motion.span
+            <span
               key={`${tag}-${i}`}
-              className="inline-flex items-center bg-stone-900/40 border border-stone-800/80 text-stone-400 px-5 py-2.5 rounded-full whitespace-nowrap cursor-default"
-              whileHover={{
-                borderColor: theme.borderColor,
-                color: theme.color,
-                boxShadow: theme.boxShadow,
-              }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              className={`inline-flex items-center px-5 py-2.5 rounded-full whitespace-nowrap cursor-default transition-all duration-300 ease-in-out bg-stone-50 border border-stone-200/60 text-stone-600 dark:bg-stone-900/40 dark:border-stone-800/80 dark:text-stone-400 ${hover}`}
             >
               {tag}
-            </motion.span>
+            </span>
           );
         })}
       </motion.div>
@@ -705,7 +779,7 @@ function FormField({
 
   return (
     <label
-      className={`group relative bg-stone-50 dark:bg-zinc-950 p-6 md:p-8 flex flex-col gap-3 cursor-text transition-colors hover:bg-stone-100/60 dark:hover:bg-zinc-900/60 ${className}`}
+      className={`group relative bg-stone-100 dark:bg-zinc-900/70 rounded-2xl px-5 py-4 flex flex-col gap-2 cursor-text border border-transparent transition-colors hover:border-zinc-300 dark:hover:border-zinc-700 ${className}`}
     >
       <span className="text-[10px] tracking-[0.3em] uppercase font-semibold text-zinc-500 dark:text-zinc-400">
         {label}
@@ -721,5 +795,48 @@ function FormField({
         <input name={name} type={type} required={required} className={base} />
       )}
     </label>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   AnimatedNumber
+   Counts from 0 → target the first time the element enters the viewport.
+   Preserves leading-zero padding ("07" stays "07" through the count).
+   Prefix/suffix chars ("+", "%", "k") are rendered statically so the
+   layout never shifts as the numeric portion changes width.
+   ────────────────────────────────────────────────────────────────────────── */
+function AnimatedNumber({ n }: { n: string }) {
+  const match  = n.match(/^([^\d]*)(\d+)([^\d]*)$/);
+  const prefix = match?.[1] ?? "";
+  const digits = match?.[2] ?? n;
+  const suffix = match?.[3] ?? "";
+  const target = parseInt(digits, 10);
+  const padLen = digits.length > 1 && digits.startsWith("0") ? digits.length : 0;
+
+  const ref      = useRef<HTMLSpanElement>(null);
+  const isInView = useInView(ref, { once: true });
+  const count    = useMotionValue(0);
+  const [display, setDisplay] = useState(
+    padLen > 0 ? "0".padStart(padLen, "0") : "0"
+  );
+
+  useMotionValueEvent(count, "change", (latest) => {
+    const r = Math.round(latest);
+    setDisplay(padLen > 0 ? String(r).padStart(padLen, "0") : String(r));
+  });
+
+  useEffect(() => {
+    if (!isInView) return;
+    const ctrl = animate(count, target, {
+      duration: 2,
+      ease: [0.16, 1, 0.3, 1],
+    });
+    return ctrl.stop;
+  }, [isInView, count, target]);
+
+  return (
+    <span ref={ref} className="tabular-nums">
+      {prefix}{display}{suffix}
+    </span>
   );
 }
