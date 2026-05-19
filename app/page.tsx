@@ -32,7 +32,7 @@ const copy = {
     },
     stack: {
       label: "—— CORE COMPETENCIES",
-      title: "Expertise Stack",
+      title: "Digital Infrastructure",
     },
     services: {
       label: "—— SERVICES",
@@ -82,7 +82,7 @@ const copy = {
     },
     stack: {
       label: "—— COMPETENCIAS CENTRALES",
-      title: "Stack de Especialización",
+      title: "Infraestructura Digital",
     },
     services: {
       label: "—— SERVICIOS",
@@ -133,6 +133,16 @@ const STACK = [
   "DATA ENGINEERING",
   "AI SOLUTION DESIGN",
   "MULTILINGUAL (EN, ES, FR, JA)",
+];
+
+/* Color combinations inspired by Dictionary of Color Combinations Vol 2
+   Each tag cycles through a sophisticated palette on hover. */
+const COLOR_COMBOS = [
+  { name: "Joyous", light: "hover:bg-purple-100 hover:border-purple-400 hover:text-purple-900", dark: "dark:hover:bg-purple-950 dark:hover:border-purple-700 dark:hover:text-purple-200" },
+  { name: "Serene", light: "hover:bg-cyan-100 hover:border-cyan-400 hover:text-cyan-900", dark: "dark:hover:bg-cyan-950 dark:hover:border-cyan-700 dark:hover:text-cyan-200" },
+  { name: "Elegant", light: "hover:bg-rose-100 hover:border-rose-400 hover:text-rose-900", dark: "dark:hover:bg-rose-950 dark:hover:border-rose-700 dark:hover:text-rose-200" },
+  { name: "Dynamic", light: "hover:bg-orange-100 hover:border-orange-400 hover:text-orange-900", dark: "dark:hover:bg-orange-950 dark:hover:border-orange-700 dark:hover:text-orange-200" },
+  { name: "Refined", light: "hover:bg-amber-100 hover:border-amber-400 hover:text-amber-900", dark: "dark:hover:bg-amber-950 dark:hover:border-amber-700 dark:hover:text-amber-200" },
 ];
 
 const SERVICE_ICONS = [Sparkles, Workflow, Database] as const;
@@ -272,35 +282,43 @@ export default function KaizenLanding() {
             </div>
           </div>
 
-          {/* Edge-to-edge marquee */}
+          {/* Edge-to-edge marquee with refined spacing and opacity edges */}
           <div className="relative w-full overflow-hidden">
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-16 md:w-32 z-10 bg-gradient-to-r from-stone-50 to-transparent dark:from-zinc-950" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-16 md:w-32 z-10 bg-gradient-to-l from-stone-50 to-transparent dark:from-zinc-950" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-20 md:w-40 z-10 bg-gradient-to-r from-stone-50 via-stone-50/40 to-transparent dark:from-zinc-950 dark:via-zinc-950/40" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-20 md:w-40 z-10 bg-gradient-to-l from-stone-50 via-stone-50/40 to-transparent dark:from-zinc-950 dark:via-zinc-950/40" />
 
-            <div className="flex w-max animate-marquee gap-3">
-              {[...STACK, ...STACK].map((tag, i) => (
-                <span
-                  key={`${tag}-${i}`}
-                  className="inline-flex items-center rounded-full border border-zinc-300 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 px-5 py-2.5 text-xs tracking-widest font-semibold uppercase text-zinc-700 dark:text-zinc-300 transition-transform duration-300 hover:scale-105 hover:border-zinc-900 dark:hover:border-zinc-50 hover:text-zinc-900 dark:hover:text-zinc-50 whitespace-nowrap"
-                >
-                  {tag}
-                </span>
-              ))}
+            <div className="flex w-max animate-marquee gap-4 md:gap-5">
+              {[...STACK.slice(0, 7), ...STACK.slice(0, 7)].map((tag, i) => {
+                const comboIdx = STACK.indexOf(tag) % COLOR_COMBOS.length;
+                const combo = COLOR_COMBOS[comboIdx];
+                return (
+                  <span
+                    key={`${tag}-${i}`}
+                    className={`inline-flex items-center rounded-full border border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 px-5 py-2.5 text-xs tracking-widest font-semibold uppercase text-stone-800 dark:text-zinc-300 whitespace-nowrap transition-all duration-300 hover:scale-105 ${combo.light} ${combo.dark}`}
+                  >
+                    {tag}
+                  </span>
+                );
+              })}
             </div>
           </div>
 
           {/* Static, hoverable grid below — for accessibility / keyboard nav */}
-          <div className="mt-14 px-6 md:px-10 lg:px-16 flex flex-wrap gap-3">
-            {STACK.map((tag) => (
-              <motion.span
-                key={tag}
-                whileHover={{ scale: 1.04 }}
-                transition={{ type: "spring", stiffness: 400, damping: 24 }}
-                className="inline-flex items-center rounded-full border border-zinc-300 dark:border-zinc-700 px-5 py-2.5 text-xs tracking-widest font-semibold uppercase text-zinc-700 dark:text-zinc-300 hover:border-zinc-900 dark:hover:border-zinc-50 hover:text-zinc-900 dark:hover:text-zinc-50 cursor-default transition-colors"
-              >
-                {tag}
-              </motion.span>
-            ))}
+          <div className="mt-14 px-6 md:px-10 lg:px-16 flex flex-wrap gap-4">
+            {STACK.map((tag) => {
+              const comboIdx = STACK.indexOf(tag) % COLOR_COMBOS.length;
+              const combo = COLOR_COMBOS[comboIdx];
+              return (
+                <motion.span
+                  key={tag}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 24 }}
+                  className={`inline-flex items-center rounded-full border border-stone-200 dark:border-zinc-700 px-5 py-2.5 text-xs tracking-widest font-semibold uppercase bg-stone-50 dark:bg-zinc-950 text-stone-800 dark:text-zinc-300 cursor-default transition-all duration-300 ${combo.light} ${combo.dark}`}
+                >
+                  {tag}
+                </motion.span>
+              );
+            })}
           </div>
         </section>
 
