@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, type FormEvent } from "react";
+import { useState, useMemo, useEffect, Fragment, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun,
@@ -17,42 +17,32 @@ import {
 /* ──────────────────────────────────────────────────────────────────────────
    i18n dictionary — flat, explicit, no abstractions.
    ────────────────────────────────────────────────────────────────────────── */
-type Lang = "EN" | "ES";
+type Lang = "EN" | "ES" | "FR" | "JP";
 
 const copy = {
   EN: {
-    nav: {
-      cta: "REQUEST CONSULTATION",
-    },
+    nav: { cta: "REQUEST CONSULTATION" },
     hero: {
       eyebrow: "EST. 2021 · TORONTO",
-      headline: "AI-Driven Digital Architecture for Enterprise Growth.",
+      headline: "AI-Driven Digital Architecture for Enterprise",
+      shimmerWord: "Growth",
       sub: "Bridging the gap between raw AI potential and tangible market results, structuring automated, scalable B2B ecosystems.",
       scroll: "Scroll to explore",
     },
-    stack: {
-      label: "—— CORE COMPETENCIES",
-      title: "Digital Infrastructure",
-    },
+    stack: { label: "—— CORE COMPETENCIES", title: "Digital Infrastructure" },
+    metrics: [
+      { n: "07", label: "Industries served" },
+      { n: "41", label: "Systems shipped" },
+      { n: "12", label: "Countries reached" },
+      { n: "4",  label: "Languages" },
+    ],
     services: {
       label: "—— SERVICES",
       title: "Engagements designed around outcomes, not deliverables.",
       items: [
-        {
-          n: "01",
-          name: "AI Marketing Systems & Automation",
-          desc: "Composable marketing infrastructure that orchestrates personalization, lifecycle, and revenue intelligence at scale.",
-        },
-        {
-          n: "02",
-          name: "Workflow & Process Optimization",
-          desc: "Re-architecting operational layers — eliminating friction, automating decisions, compounding throughput.",
-        },
-        {
-          n: "03",
-          name: "Data Architecture & Scalability",
-          desc: "Production-grade pipelines, warehouses, and inference layers that scale with the business, not against it.",
-        },
+        { n: "01", name: "AI Marketing Systems & Automation",   desc: "Composable marketing infrastructure that orchestrates personalization, lifecycle, and revenue intelligence at scale." },
+        { n: "02", name: "Workflow & Process Optimization",     desc: "Re-architecting operational layers — eliminating friction, automating decisions, compounding throughput." },
+        { n: "03", name: "Data Architecture & Scalability",     desc: "Production-grade pipelines, warehouses, and inference layers that scale with the business, not against it." },
       ],
       learn: "Engage",
     },
@@ -65,44 +55,31 @@ const copy = {
       message: "Briefly, what are you trying to solve?",
       submit: "Submit inquiry",
     },
-    footer: {
-      tag: "Headquartered in Toronto — Global Reach",
-      rights: "All rights reserved.",
-    },
+    footer: { tag: "Headquartered in Toronto — Global Reach", rights: "All rights reserved." },
   },
   ES: {
-    nav: {
-      cta: "SOLICITAR CONSULTORÍA",
-    },
+    nav: { cta: "SOLICITAR CONSULTORÍA" },
     hero: {
       eyebrow: "FUNDADA EN 2021 · TORONTO",
-      headline: "Arquitectura Digital Impulsada por IA para el Crecimiento Empresarial.",
+      headline: "Arquitectura Digital Impulsada por IA para la",
+      shimmerWord: "Crecimiento",
       sub: "Conectando el potencial de la IA con resultados tangibles de mercado, estructurando ecosistemas B2B automatizados y escalables.",
       scroll: "Desplázate para explorar",
     },
-    stack: {
-      label: "—— COMPETENCIAS CENTRALES",
-      title: "Infraestructura Digital",
-    },
+    stack: { label: "—— COMPETENCIAS CENTRALES", title: "Infraestructura Digital" },
+    metrics: [
+      { n: "07", label: "Industrias atendidas" },
+      { n: "41", label: "Sistemas entregados" },
+      { n: "12", label: "Países alcanzados" },
+      { n: "4",  label: "Idiomas" },
+    ],
     services: {
       label: "—— SERVICIOS",
       title: "Servicios diseñados en torno a resultados, no entregables.",
       items: [
-        {
-          n: "01",
-          name: "Sistemas de Marketing con IA y Automatización",
-          desc: "Infraestructura de marketing componible que orquesta personalización, ciclo de vida e inteligencia de ingresos a escala.",
-        },
-        {
-          n: "02",
-          name: "Optimización de Flujos y Procesos",
-          desc: "Rearquitectura operativa — eliminamos fricción, automatizamos decisiones y multiplicamos el rendimiento.",
-        },
-        {
-          n: "03",
-          name: "Arquitectura de Datos y Escalabilidad",
-          desc: "Pipelines, almacenes e inferencia listos para producción, que escalan con el negocio.",
-        },
+        { n: "01", name: "Sistemas de Marketing con IA y Automatización", desc: "Infraestructura de marketing componible que orquesta personalización, ciclo de vida e inteligencia de ingresos a escala." },
+        { n: "02", name: "Optimización de Flujos y Procesos",             desc: "Rearquitectura operativa — eliminamos fricción, automatizamos decisiones y multiplicamos el rendimiento." },
+        { n: "03", name: "Arquitectura de Datos y Escalabilidad",         desc: "Pipelines, almacenes e inferencia listos para producción, que escalan con el negocio." },
       ],
       learn: "Iniciar",
     },
@@ -115,39 +92,119 @@ const copy = {
       message: "Brevemente, ¿qué buscas resolver?",
       submit: "Enviar consulta",
     },
-    footer: {
-      tag: "Sede en Toronto — Alcance Global",
-      rights: "Todos los derechos reservados.",
+    footer: { tag: "Sede en Toronto — Alcance Global", rights: "Todos los derechos reservados." },
+  },
+  FR: {
+    nav: { cta: "DEMANDER UNE CONSULTATION" },
+    hero: {
+      eyebrow: "FONDÉE EN 2021 · TORONTO",
+      headline: "Architecture Digitale Propulsée par l'IA pour la",
+      shimmerWord: "Croissance",
+      sub: "Combler le fossé entre le potentiel brut de l'IA et des résultats commerciaux tangibles, en structurant des écosystèmes B2B automatisés et évolutifs.",
+      scroll: "Défiler pour explorer",
     },
+    stack: { label: "—— COMPÉTENCES CLÉS", title: "Infrastructure Digitale" },
+    metrics: [
+      { n: "07", label: "Secteurs accompagnés" },
+      { n: "41", label: "Systèmes déployés" },
+      { n: "12", label: "Pays atteints" },
+      { n: "4",  label: "Langues" },
+    ],
+    services: {
+      label: "—— SERVICES",
+      title: "Des engagements axés sur les résultats, pas sur les livrables.",
+      items: [
+        { n: "01", name: "Systèmes Marketing IA & Automatisation",  desc: "Infrastructure marketing composable orchestrant personnalisation, cycle de vie client et intelligence revenus à grande échelle." },
+        { n: "02", name: "Optimisation des Flux & Processus",       desc: "Réarchitecturer les couches opérationnelles — éliminer les frictions, automatiser les décisions, démultiplier le débit." },
+        { n: "03", name: "Architecture des Données & Évolutivité",  desc: "Pipelines, entrepôts et couches d'inférence prêts pour la production, qui évoluent avec l'entreprise." },
+      ],
+      learn: "Démarrer",
+    },
+    contact: {
+      label: "—— ENGAGER UNE CONVERSATION",
+      title: "Conçu pour un progrès mesurable.",
+      sub: "Dites-nous où vous vous dirigez. Nous répondons sous un jour ouvrable.",
+      email: "Email professionnel",
+      company: "Entreprise",
+      message: "Brièvement, que souhaitez-vous résoudre ?",
+      submit: "Envoyer la demande",
+    },
+    footer: { tag: "Siège à Toronto — Portée Mondiale", rights: "Tous droits réservés." },
+  },
+  JP: {
+    nav: { cta: "相談をリクエスト" },
+    hero: {
+      eyebrow: "2021年設立 · トロント",
+      headline: "AI駆動型デジタルアーキテクチャで実現する",
+      shimmerWord: "企業成長",
+      sub: "AIの潜在能力と具体的なビジネス成果のギャップを埋め、自動化されたスケーラブルなB2Bエコシステムを構築します。",
+      scroll: "スクロールして探索",
+    },
+    stack: { label: "—— コアコンピテンシー", title: "デジタルインフラ" },
+    metrics: [
+      { n: "07", label: "対応業種" },
+      { n: "41", label: "導入済みシステム" },
+      { n: "12", label: "展開国数" },
+      { n: "4",  label: "対応言語" },
+    ],
+    services: {
+      label: "—— サービス",
+      title: "成果を中心に設計されたエンゲージメント。",
+      items: [
+        { n: "01", name: "AIマーケティングシステム＆自動化",         desc: "パーソナライゼーション、ライフサイクル管理、収益インテリジェンスを大規模にオーケストレートするマーケティングインフラ。" },
+        { n: "02", name: "ワークフロー＆プロセス最適化",             desc: "オペレーショナルレイヤーを再設計し、摩擦を排除し、意思決定を自動化し、スループットを向上させます。" },
+        { n: "03", name: "データアーキテクチャ＆スケーラビリティ",   desc: "ビジネスとともにスケールする本番環境対応のパイプライン、ウェアハウス、推論レイヤー。" },
+      ],
+      learn: "開始する",
+    },
+    contact: {
+      label: "—— 対話を始める",
+      title: "測定可能な進歩のために設計。",
+      sub: "目標をお聞かせください。1営業日以内にご連絡いたします。",
+      email: "会社メール",
+      company: "会社名",
+      message: "解決したい課題を簡潔にお聞かせください。",
+      submit: "お問い合わせ送信",
+    },
+    footer: { tag: "カナダ・トロント本社 — グローバル展開", rights: "全著作権所有。" },
   },
 } as const;
 
-const STACK = [
+/* Interleaved so each pass alternates tech ↔ capability — gives visual rhythm */
+const allTechs = [
   "NEXT.JS",
-  "REACT",
-  "TAILWIND CSS",
-  "SUPABASE",
-  "VERCEL",
   "AUTOMATION SYSTEMS",
+  "REACT",
   "STRATEGIC PLANNING",
+  "TAILWIND CSS",
   "DATA ENGINEERING",
+  "SUPABASE",
   "AI SOLUTION DESIGN",
+  "VERCEL",
   "MULTILINGUAL (EN, ES, FR, JA)",
 ];
 
-/* Row 1: tech foundations — Row 2: strategic capabilities (distinct sets for the two marquee rows) */
-const STACK_ROW_1 = ["NEXT.JS", "REACT", "TAILWIND CSS", "SUPABASE", "VERCEL"];
-const STACK_ROW_2 = ["AUTOMATION SYSTEMS", "STRATEGIC PLANNING", "DATA ENGINEERING", "AI SOLUTION DESIGN", "MULTILINGUAL (EN, ES, FR, JA)"];
+/* Dictionary of Color Combinations Vol 2 — per-pill hover palette */
+type PillTheme = { borderColor: string; color: string; boxShadow: string };
 
-/* Color combinations inspired by Dictionary of Color Combinations Vol 2
-   Each tag cycles through a sophisticated palette on hover. */
-const COLOR_COMBOS = [
-  { name: "Joyous", light: "hover:bg-purple-100 hover:border-purple-400 hover:text-purple-900", dark: "dark:hover:bg-purple-950 dark:hover:border-purple-700 dark:hover:text-purple-200" },
-  { name: "Serene", light: "hover:bg-cyan-100 hover:border-cyan-400 hover:text-cyan-900", dark: "dark:hover:bg-cyan-950 dark:hover:border-cyan-700 dark:hover:text-cyan-200" },
-  { name: "Elegant", light: "hover:bg-rose-100 hover:border-rose-400 hover:text-rose-900", dark: "dark:hover:bg-rose-950 dark:hover:border-rose-700 dark:hover:text-rose-200" },
-  { name: "Dynamic", light: "hover:bg-orange-100 hover:border-orange-400 hover:text-orange-900", dark: "dark:hover:bg-orange-950 dark:hover:border-orange-700 dark:hover:text-orange-200" },
-  { name: "Refined", light: "hover:bg-amber-100 hover:border-amber-400 hover:text-amber-900", dark: "dark:hover:bg-amber-950 dark:hover:border-amber-700 dark:hover:text-amber-200" },
-];
+const PILL_THEMES: Record<string, PillTheme> = {
+  "NEXT.JS":                       { borderColor: "rgba(167,139,250,0.75)", color: "rgb(221,214,254)", boxShadow: "0 0 24px 6px rgba(139,92,246,0.30)"  }, // Soft Amethyst
+  "AUTOMATION SYSTEMS":            { borderColor: "rgba(52,211,153,0.75)",  color: "rgb(167,243,208)", boxShadow: "0 0 24px 6px rgba(52,211,153,0.28)"  }, // Deep Emerald
+  "REACT":                         { borderColor: "rgba(34,211,238,0.75)",  color: "rgb(165,243,252)", boxShadow: "0 0 24px 6px rgba(34,211,238,0.28)"  }, // Cyber Cyan
+  "STRATEGIC PLANNING":            { borderColor: "rgba(251,191,36,0.75)",  color: "rgb(253,230,138)", boxShadow: "0 0 24px 6px rgba(251,191,36,0.24)"  }, // Muted Gold
+  "TAILWIND CSS":                  { borderColor: "rgba(56,189,248,0.75)",  color: "rgb(186,230,253)", boxShadow: "0 0 24px 6px rgba(56,189,248,0.28)"  }, // Arctic Sky
+  "DATA ENGINEERING":              { borderColor: "rgba(129,140,248,0.75)", color: "rgb(199,210,254)", boxShadow: "0 0 24px 6px rgba(99,102,241,0.28)"  }, // Deep Indigo
+  "SUPABASE":                      { borderColor: "rgba(74,222,128,0.75)",  color: "rgb(187,247,208)", boxShadow: "0 0 24px 6px rgba(34,197,94,0.25)"   }, // Vivid Jade
+  "AI SOLUTION DESIGN":            { borderColor: "rgba(96,165,250,0.75)",  color: "rgb(191,219,254)", boxShadow: "0 0 24px 6px rgba(59,130,246,0.30)"  }, // Sapphire Blue
+  "VERCEL":                        { borderColor: "rgba(212,212,216,0.75)", color: "rgb(244,244,245)", boxShadow: "0 0 24px 6px rgba(244,244,245,0.22)" }, // Platinum
+  "MULTILINGUAL (EN, ES, FR, JA)": { borderColor: "rgba(251,113,133,0.75)", color: "rgb(254,205,211)", boxShadow: "0 0 24px 6px rgba(244,63,94,0.25)"  }, // Lacquer Rose
+};
+
+const DEFAULT_PILL_THEME: PillTheme = {
+  borderColor: "rgba(113,113,122,0.7)",
+  color: "rgb(244,244,245)",
+  boxShadow: "0 0 24px 6px rgba(113,113,122,0.2)",
+};
 
 const SERVICE_ICONS = [Sparkles, Workflow, Database] as const;
 
@@ -157,6 +214,7 @@ const SERVICE_ICONS = [Sparkles, Workflow, Database] as const;
 export default function KaizenLanding() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [language, setLanguage] = useState<Lang>("EN");
+  const [dotStep, setDotStep] = useState(0);
   const t = useMemo(() => copy[language], [language]);
 
   useEffect(() => {
@@ -164,6 +222,11 @@ export default function KaizenLanding() {
     if (isDarkMode) root.classList.add("dark");
     else root.classList.remove("dark");
   }, [isDarkMode]);
+
+  useEffect(() => {
+    const id = setInterval(() => setDotStep((n) => (n >= 3 ? 0 : n + 1)), 500);
+    return () => clearInterval(id);
+  }, []);
 
   // Future Supabase wiring — currently a no-op stub.
   const handleLeadSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -213,7 +276,16 @@ export default function KaizenLanding() {
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                     className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] leading-[1.02] tracking-[-0.02em] font-medium max-w-5xl"
                   >
-                    {t.hero.headline}
+                    {t.hero.headline}{" "}
+                    <span className="shimmer-text">{t.hero.shimmerWord}</span>
+                    {/* Fixed-width container sized to "..." so layout never shifts.
+                        The invisible "..." ghost holds the space; the real dots sit on top. */}
+                    <span className="inline-block align-baseline relative" aria-hidden="true">
+                      <span className="invisible" aria-hidden="true">...</span>
+                      <span className="absolute inset-0 text-zinc-300 dark:text-zinc-200">
+                        {".".repeat(dotStep)}
+                      </span>
+                    </span>
                   </motion.h1>
                 </AnimatePresence>
 
@@ -253,12 +325,7 @@ export default function KaizenLanding() {
 
             {/* Bottom metric strip — Danshari: a single, restrained anchor */}
             <div className="mt-20 md:mt-28 pt-8 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-6">
-              {[
-                ["07", language === "EN" ? "Industries served" : "Industrias"],
-                ["41", language === "EN" ? "Systems shipped" : "Sistemas entregados"],
-                ["12", language === "EN" ? "Countries reached" : "Países alcanzados"],
-                ["4", language === "EN" ? "Languages" : "Idiomas"],
-              ].map(([n, label]) => (
+              {t.metrics.map(({ n, label }) => (
                 <div key={label} className="flex flex-col">
                   <span className="font-serif text-3xl md:text-4xl tracking-tight">{n}</span>
                   <span className="mt-2 text-[10px] tracking-[0.25em] uppercase text-zinc-500 dark:text-zinc-400">
@@ -294,18 +361,7 @@ export default function KaizenLanding() {
             </p>
           </div>
 
-          {/* Row 1 — forward, tech foundations */}
-          <MarqueeRow
-            tags={STACK_ROW_1}
-            direction="forward"
-            className="mb-4"
-          />
-
-          {/* Row 2 — reverse, strategic capabilities */}
-          <MarqueeRow
-            tags={STACK_ROW_2}
-            direction="reverse"
-          />
+          <Marquee />
         </section>
 
         {/* ───────── Services Grid ───────── */}
@@ -475,32 +531,25 @@ function Header({
           </button>
 
           {/* Language */}
-          <div className="hidden sm:flex items-center gap-2 text-xs tracking-widest font-medium select-none">
-            <motion.button
-              type="button"
-              layout
-              onClick={() => setLanguage("EN")}
-              className={`transition-all ${
-                language === "EN"
-                  ? "font-bold text-zinc-900 dark:text-zinc-50"
-                  : "opacity-50 hover:opacity-100"
-              }`}
-            >
-              EN
-            </motion.button>
-            <span className="text-zinc-300 dark:text-zinc-700">|</span>
-            <motion.button
-              type="button"
-              layout
-              onClick={() => setLanguage("ES")}
-              className={`transition-all ${
-                language === "ES"
-                  ? "font-bold text-zinc-900 dark:text-zinc-50"
-                  : "opacity-50 hover:opacity-100"
-              }`}
-            >
-              ES
-            </motion.button>
+          <div className="hidden sm:flex items-center gap-1.5 text-xs tracking-widest font-medium select-none">
+            {(["EN", "ES", "FR", "JP"] as const).map((lang, i) => (
+              <Fragment key={lang}>
+                {i > 0 && (
+                  <span className="text-zinc-300 dark:text-zinc-700" aria-hidden>|</span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setLanguage(lang)}
+                  className={`transition-colors duration-200 ${
+                    language === lang
+                      ? "font-bold text-zinc-900 dark:text-zinc-50"
+                      : "text-stone-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50"
+                  }`}
+                >
+                  {lang}
+                </button>
+              </Fragment>
+            ))}
           </div>
 
           {/* CTA */}
@@ -596,39 +645,39 @@ function ServiceCard({
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   MarqueeRow — infinite scroll strip, forward or reverse direction
+   Marquee — single-row infinite scroll, triple-buffered for zero-gap math.
+   Tripling → animate to -33.3333% moves exactly one copy-length seamlessly.
+   Each pill uses Framer Motion whileHover for per-element glow micro-interaction
+   without touching the parent's continuous x animation.
    ────────────────────────────────────────────────────────────────────────── */
-function MarqueeRow({
-  tags,
-  direction,
-  className = "",
-}: {
-  tags: string[];
-  direction: "forward" | "reverse";
-  className?: string;
-}) {
-  const doubled = [...tags, ...tags];
-  const animClass = direction === "forward" ? "animate-marquee" : "animate-marquee-reverse";
+function Marquee() {
+  const tripled = [...allTechs, ...allTechs, ...allTechs];
 
   return (
-    <div className={`relative w-full overflow-hidden ${className}`}>
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-20 md:w-40 z-10 bg-gradient-to-r from-stone-50 via-stone-50/50 to-transparent dark:from-zinc-950 dark:via-zinc-950/50" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-20 md:w-40 z-10 bg-gradient-to-l from-stone-50 via-stone-50/50 to-transparent dark:from-zinc-950 dark:via-zinc-950/50" />
-
-      <div className={`flex w-max gap-4 md:gap-5 py-2 ${animClass}`}>
-        {doubled.map((tag, i) => {
-          const comboIdx = STACK.indexOf(tag) % COLOR_COMBOS.length;
-          const combo = COLOR_COMBOS[comboIdx >= 0 ? comboIdx : i % COLOR_COMBOS.length];
+    <div className="w-full overflow-hidden select-none relative py-6 [mask-image:linear-gradient(to_right,transparent,white_15%,white_85%,transparent)]">
+      <motion.div
+        className="flex flex-nowrap gap-6 w-max font-mono text-xs uppercase tracking-widest"
+        animate={{ x: [0, "-33.3333%"] }}
+        transition={{ ease: "linear", duration: 40, repeat: Infinity }}
+      >
+        {tripled.map((tag, i) => {
+          const theme = PILL_THEMES[tag] ?? DEFAULT_PILL_THEME;
           return (
-            <span
+            <motion.span
               key={`${tag}-${i}`}
-              className={`inline-flex items-center rounded-full border border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 px-5 py-2.5 text-xs tracking-widest font-semibold uppercase text-stone-800 dark:text-zinc-300 whitespace-nowrap transition-all duration-300 hover:scale-105 ${combo.light} ${combo.dark}`}
+              className="inline-flex items-center bg-stone-900/40 border border-stone-800/80 text-stone-400 px-5 py-2.5 rounded-full whitespace-nowrap cursor-default"
+              whileHover={{
+                borderColor: theme.borderColor,
+                color: theme.color,
+                boxShadow: theme.boxShadow,
+              }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
             >
               {tag}
-            </span>
+            </motion.span>
           );
         })}
-      </div>
+      </motion.div>
     </div>
   );
 }

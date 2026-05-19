@@ -19,20 +19,43 @@ body {
   font-feature-settings: "kern", "liga", "dlig";
 }
 
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+/* ── Custom cursor — desktop hover-capable devices only ─────────────────────
+   Mobile / touch is completely unaffected.
+   ────────────────────────────────────────────────────────────────────────── */
+@media (any-hover: hover) {
+  * {
+    cursor: none !important;
+  }
 }
 
-@keyframes marquee-reverse {
-  from { transform: translateX(-50%); }
-  to   { transform: translateX(0); }
+/* ── Hero headline shimmer ──────────────────────────────────────────────────
+   The gradient is 4× the element width. At position 0 % and 100 % the
+   visible window falls on the solid zinc-200 ends → seamless loop.
+   The highlight band (white → violet → gold) crests at position 50 %.
+   ease-in-out on 6 s = a slow, luxurious light-catching-metal feel.
+   ────────────────────────────────────────────────────────────────────────── */
+.shimmer-text {
+  background-image: linear-gradient(
+    90deg,
+    #e4e4e7 0%,    /* zinc-200  – base left  */
+    #e4e4e7 28%,
+    #ffffff 40%,   /* brilliant white peak   */
+    #ddd6fe 50%,   /* violet-200 iridescence */
+    #fde68a 58%,   /* amber-200 warm gold    */
+    #ffffff 66%,   /* white fade-out         */
+    #e4e4e7 76%,
+    #e4e4e7 100%   /* zinc-200  – base right */
+  );
+  background-size: 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: shimmer-text 6s ease-in-out infinite;
 }
 
-.animate-marquee {
-  animation: marquee 38s linear infinite;
+@keyframes shimmer-text {
+  0%   { background-position: 0%   center; }
+  100% { background-position: 100% center; }
 }
 
-.animate-marquee-reverse {
-  animation: marquee-reverse 44s linear infinite;
-}
